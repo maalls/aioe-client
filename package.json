@@ -2,9 +2,9 @@
   "name": "aioe-client",
   "version": "0.0.1",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/AiOeClient.js",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/AiOeClient.js"
   },
   "scripts": {
     "clean": "rm -rf dist",
