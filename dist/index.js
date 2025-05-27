@@ -1,1 +1,2 @@
-export { default as AiOeClient } from './AiOeClient';
+import AiOeClient from './AiOeClient';
+export default AiOeClient;
