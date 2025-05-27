@@ -1,0 +1,6 @@
+src/
+tests/
+.vscode/
+vitest.config.ts
+tsconfig.json
+.gitignore
