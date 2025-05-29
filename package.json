@@ -12,7 +12,9 @@
     "test": "vitest"
   },
   "dependencies": {
+    "axios": "^1.9.0",
     "cross-fetch": "^4.1.0",
+    "formdata-node": "^6.0.3",
     "socket.io-client": "^4.8.1"
   },
   "devDependencies": {

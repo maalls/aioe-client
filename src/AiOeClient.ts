@@ -1,6 +1,7 @@
 import io from "socket.io-client";
-import fetch from "cross-fetch";
-
+import axios from "axios";
+//import fetch from "cross-fetch";
+import { createFormData } from "./FormData";
 export default class AiOeClient {
 
     API_URL: string = 'https://api.ai-oe.co';
@@ -8,41 +9,22 @@ export default class AiOeClient {
     SOCKET_URL: string = 'https://socket.ai-oe.co';
     WEB_URL: string = 'https://ai-oe.co';
 
-    constructor(apiURL?:(string | null), socketURL?:string | null, WEB_URL?:string | null) {
+    constructor(apiURL?: (string | null), socketURL?: string | null, WEB_URL?: string | null) {
         console.log("[mobile][aioe][connect] constructing socket client");
         this.socket = null;
-        if(socketURL) {
+        if (socketURL) {
             this.SOCKET_URL = socketURL;
         }
-        if(apiURL) {
+        if (apiURL) {
             this.API_URL = apiURL;
         }
-        if(WEB_URL) {
+        if (WEB_URL) {
             this.WEB_URL = WEB_URL;
         }
-    
+
     }
 
-    /*async createGroup(name:string, admin_id:string) {
-
-        console.log('creating group', name, admin_id);
-        return await this.postEntity('group', { id: null, name: name, users: { id: admin_id } });
-
-    }*/
-
-    /*async postWebpage(html: string) {
-
-        return this.postEntity('webpage', { html });
-
-    }*/
-
-    /*configure({ API_URL, WEB_URL, SOCKET_URL }) {
-        this.API_URL = API_URL;
-        this.WEB_URL = WEB_URL;
-        this.SOCKET_URL = SOCKET_URL;
-    }*/
-
-    connectAsync(user:any) {
+    connectAsync(user: any) {
 
         console.log("[mobile][aioe][connectAsync] user ID", user.id);
         return new Promise((resolve, reject) => {
@@ -53,7 +35,7 @@ export default class AiOeClient {
 
     }
 
-    connect(user:any, cb:any) {
+    connect(user: any, cb: any) {
         if (this.socket && this.socket.connected) {
             console.log("[mobile][aioe][connect] Aleady connected");
             if (cb) cb(this.socket);
@@ -73,7 +55,7 @@ export default class AiOeClient {
             });
 
 
-            this.socket.on("connect_error", (error:Error) => {
+            this.socket.on("connect_error", (error: Error) => {
                 console.error("❌ Connection failed:", error.message);
             });
 
@@ -81,7 +63,7 @@ export default class AiOeClient {
                 console.warn("⚠️ Connection timeout: Server is not responding.");
             });
 
-            this.socket.on("reconnect_attempt", (attempt:number) => {
+            this.socket.on("reconnect_attempt", (attempt: number) => {
                 console.log(`🔄 Reconnection attempt ${attempt}`);
             });
 
@@ -89,7 +71,7 @@ export default class AiOeClient {
                 console.error("❌ Could not reconnect after multiple attempts.");
             });
 
-            this.socket.on("disconnect", (reason:string ) => {
+            this.socket.on("disconnect", (reason: string) => {
                 console.warn(`🔌 Disconnected: ${reason}`);
             });
 
@@ -99,50 +81,24 @@ export default class AiOeClient {
 
     }
 
-    /*async joinRoom(groupId) {
-        return aioe.socket.emit("joinRoom", groupId);
-    }*/
-
-    /*async emitTyping(groupId, user, action) {
-        return aioe.socket.emit("typing", { groupId, user: user, action });
-
-    }*/
-
-    /*async stopTyping(groupId, user) {
-        aioe.socket.emit("stopTyping", { groupId, userId: user.id });
-    }*/
-
-    /*async leaveRoom(groupId) {
-        aioe.getSocket().emit("leaveRoom", groupId);
-    }*/
-
     async disconnect() {
         console.log("disconnecting");
         this.socket.disconnect();
     }
 
-    /*async onMessage(user, callback) {
-
-        this.socket.on("newMessage_" + user.id, async (message) => {
-            console.log("User Bot " + user.id + " received message:", message.content);
-            callback(message);
-
-        });
-    }*/
-
-    async testPushNotification(deviceId:string) {
+    async testPushNotification(deviceId: string) {
 
         return this.postEntity('user/push-token/test', { deviceId });
 
     }
 
-    async pushNotificationToken(user:any, deviceId:string, pushNotificationToken:string, pushNotificationTokenType:string, key:string) {
+    async pushNotificationToken(user: any, deviceId: string, pushNotificationToken: string, pushNotificationTokenType: string, key: string) {
         const userId = user.id;
         return this.postEntity('user/push-token', { userId, deviceId, pushNotificationToken, pushNotificationTokenType, key });
 
     }
 
-    async auth(username:string, password:string, device:string) {
+    async auth(username: string, password: string, device: string) {
 
         const uri = this.API_URL + '/api/auth';
         console.log('authenticating username', username, uri);
@@ -164,7 +120,7 @@ export default class AiOeClient {
         return json;
     }
 
-    async updatePassword(userId:string, password:string, apiKey:string) {
+    async updatePassword(userId: string, password: string, apiKey: string) {
         const uri = this.API_URL + '/api/user/password';
 
         const response = await this.fetch(uri, {
@@ -182,7 +138,7 @@ export default class AiOeClient {
         return response;
     }
 
-    async logout(deviceId:string, key:string) {
+    async logout(deviceId: string, key: string) {
         console.log("[mobile][aioe] logout");
         const rsp = await this.postEntity('logout', { deviceId: deviceId, key: key });
         console.log("logged out", rsp);
@@ -193,7 +149,7 @@ export default class AiOeClient {
     async getMessages(params: { [key: string]: string } & { key: string }) {
         //console.log("params", params);
 
-        if(!params?.key) throw new Error("aioe.getMessages requires a key parameters.");
+        if (!params?.key) throw new Error("aioe.getMessages requires a key parameters.");
 
         let query = new URLSearchParams(params).toString();
         console.log("[mobile][aioe][getMessages] get messages", query);
@@ -203,7 +159,7 @@ export default class AiOeClient {
         return response;
     }
 
-    async updateGroupAccess(userId:string, groupId:string, apiKey:string) {
+    async updateGroupAccess(userId: string, groupId: string, apiKey: string) {
         console.log("[mobile][aioe][updateGroupAccess] Updating group access time for user", userId, "in group", groupId);
 
         const response = await this.fetch(this.API_URL + '/api/chat/access', {
@@ -224,24 +180,7 @@ export default class AiOeClient {
 
     }
 
-    /*reply(sender, message, reply, image, th, apiKey) {
-
-        const attachments = image ? [{
-            uri: image,
-            thumbnail_uri: th
-        }] : [];
-        const data = {
-            content: reply,
-            sender: sender,
-            group: message.group,
-            attachments: attachments,
-            key: apiKey
-        }
-        console.log('sending reply', message);
-        return this.post(data, apiKey);
-    }*/
-
-    async command(name:string, args:any, apiKey:string) {
+    async command(name: string, args: any, apiKey: string) {
 
         const uri = this.API_URL + "/api/command";
         console.log("command", name, uri);
@@ -263,6 +202,7 @@ export default class AiOeClient {
 
     }
 
+    /*
     async post(message:any, apiKey:string) {
 
         const content = message.content;
@@ -273,7 +213,7 @@ export default class AiOeClient {
         formData.append('sender_id', message.sender.id);
         formData.append('group_id', message.group.id);
         formData.append("key", apiKey);
-        if (message.attachments.length) {
+        if (message.attachments && message.attachments.length) {
             const attachment = message.attachments[0];
             const uri = attachment.uri;
             const type = typeof uri;
@@ -317,13 +257,63 @@ export default class AiOeClient {
         return response;
 
     }
+    */
 
-    async postReceipt(owner:string, receipt:any, apiKey:string) {
+    async post(message: any, apiKey: string) {
+
+        console.log("[mobile][aioe][post2] posting", message.content, apiKey);
+        axios.defaults.headers.common['x-api-key'] = apiKey;
+
+        const formData = new FormData();
+        formData.append('content', message.content);
+        formData.append('sender_id', message.sender.id);
+        formData.append('group_id', message.group.id);
+        const response = await axios.post(this.API_URL + '/api/chat', formData);
+        console.log("[mobile][aioe][post2] response", response.data);
+        if (!response.data || response.data.status !== 'ok') {
+            console.error("[mobile][aioe][post2] Error posting message:", response.data);
+            throw new Error(response.data.message || "Failed to post message");
+        }
+        console.log("[mobile][aioe][post2] Message posted successfully");
+        const data = response.data;
+
+        return data;
+
+    }
+
+    /*async post(message: any, apiKey: string) {
+        console.log("[mobile][aioe][post] posting", message.content, apiKey);
+
+        const fields = {
+            content: message.content,
+            sender_id: message.sender.id,
+            group_id: message.group.id,
+            key: apiKey
+        };
+
+        const formData = await createFormData(fields, message.attachments || []);
+
+        const headers = typeof formData?.getHeaders === 'function'
+            ? formData.getHeaders()
+            : { 'x-api-key': apiKey };
+
+        const response = await this.fetch(this.API_URL + '/api/chat', {
+            method: 'POST',
+            headers,
+            body: formData,
+        });
+
+        return response;
+    }*/
+
+
+
+    async postReceipt(owner: string, receipt: any, apiKey: string) {
         const data = { ...receipt, owner, key: apiKey }
         return this.postEntity('receipt', data);
     }
 
-    async getApis(query:any) {
+    async getApis(query: any) {
 
         const rsp = await this.list("apis", query);
         if (rsp.status == 'ok') return rsp.apis;
@@ -334,13 +324,13 @@ export default class AiOeClient {
 
     }
 
-    async saveApi(api:any, apiKey:string) {
+    async saveApi(api: any, apiKey: string) {
 
         return this.postEntity("apis", { ...api, key: apiKey });
 
     }
 
-    async callApi(api:any, values:any, key:string) {
+    async callApi(api: any, values: any, key: string) {
 
         console.log("api config", api.parameters);
         let query: { [key: string]: any } = {};
@@ -379,20 +369,20 @@ export default class AiOeClient {
 
     }
 
-    async getUser(username:string, apiKey:string) {
+    async getUser(username: string, apiKey: string) {
 
         const uri = this.API_URL + '/api/user/' + username + '?key=' + apiKey;
 
         console.log("[mobile][aioe][getUser] calling", uri);
         const user = await this.fetch(uri);
 
-        
+
         console.log("[mobile][aioe][getUser] user ID", user?.id, 'group count:', user.groups?.length);
         return user;
 
     }
 
-    async list(entityName:string, parameters:any) {
+    async list(entityName: string, parameters: any) {
 
         const queryString = new URLSearchParams(parameters).toString();
         const uri = this.API_URL + '/api/' + entityName + "?" + queryString;
@@ -439,7 +429,7 @@ export default class AiOeClient {
         return this.socket;
     }
 
-    async fetch(uri:string, params?:any) {
+    async fetch(uri: string, params?: any) {
         const response = await fetch(uri, params);
         if (!response.ok) {
 
