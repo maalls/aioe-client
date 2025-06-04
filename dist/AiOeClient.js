@@ -21,6 +21,7 @@ var AiOeClient = /*#__PURE__*/function () {
     this.API_URL = 'https://api.ai-oe.co';
     this.SOCKET_URL = 'https://socket.ai-oe.co';
     this.WEB_URL = 'https://ai-oe.co';
+    console.log("[mobile][aioe][connect] constructing socket client");
     this.socket = null;
     if (socketURL) {
       this.SOCKET_URL = socketURL;
@@ -36,6 +37,7 @@ var AiOeClient = /*#__PURE__*/function () {
     key: "connectAsync",
     value: function connectAsync(user) {
       var _this = this;
+      console.log("[mobile][aioe][connectAsync] user ID", user.id);
       return new Promise(function (resolve, reject) {
         _this.connect(user, function (socket) {
           resolve(socket);
@@ -47,8 +49,10 @@ var AiOeClient = /*#__PURE__*/function () {
     value: function connect(user, cb) {
       var _this2 = this;
       if (this.socket && this.socket.connected) {
+        console.log("[mobile][aioe][connect] Aleady connected");
         if (cb) cb(this.socket);
       } else {
+        console.log("[mobile][aioe][connect] connecting to ", this.SOCKET_URL);
         this.socket = io(this.SOCKET_URL, {
           reconnection: true,
           // Enable auto-reconnect
@@ -59,14 +63,25 @@ var AiOeClient = /*#__PURE__*/function () {
           timeout: 10000 // Max time before timeout (10 sec)
         });
         this.socket.on("connect", function () {
+          console.log("[mobile][aioe][connect] WebSocket connected:", _this2.socket.id);
           _this2.socket.emit("registerUser", user.id);
           if (cb) cb(_this2.socket);
         });
-        this.socket.on("connect_error", function (error) {});
-        this.socket.on("connect_timeout", function () {});
-        this.socket.on("reconnect_attempt", function (attempt) {});
-        this.socket.on("reconnect_failed", function () {});
-        this.socket.on("disconnect", function (reason) {});
+        this.socket.on("connect_error", function (error) {
+          console.error("❌ Connection failed:", error.message);
+        });
+        this.socket.on("connect_timeout", function () {
+          console.warn("⚠️ Connection timeout: Server is not responding.");
+        });
+        this.socket.on("reconnect_attempt", function (attempt) {
+          console.log("\uD83D\uDD04 Reconnection attempt ".concat(attempt));
+        });
+        this.socket.on("reconnect_failed", function () {
+          console.error("❌ Could not reconnect after multiple attempts.");
+        });
+        this.socket.on("disconnect", function (reason) {
+          console.warn("\uD83D\uDD0C Disconnected: ".concat(reason));
+        });
       }
       return this.socket;
     }
@@ -77,8 +92,9 @@ var AiOeClient = /*#__PURE__*/function () {
         return _regeneratorRuntime().wrap(function _callee$(_context) {
           while (1) switch (_context.prev = _context.next) {
             case 0:
+              console.log("disconnecting");
               this.socket.disconnect();
-            case 1:
+            case 2:
             case "end":
               return _context.stop();
           }
@@ -146,7 +162,8 @@ var AiOeClient = /*#__PURE__*/function () {
           while (1) switch (_context4.prev = _context4.next) {
             case 0:
               uri = this.API_URL + '/api/auth';
-              _context4.next = 3;
+              console.log('authenticating username', username, uri);
+              _context4.next = 4;
               return this.fetch(uri, {
                 method: 'POST',
                 headers: {
@@ -158,10 +175,11 @@ var AiOeClient = /*#__PURE__*/function () {
                   device: device
                 })
               });
-            case 3:
+            case 4:
               json = _context4.sent;
+              console.log('[aioe][auth] got auth', json);
               return _context4.abrupt("return", json);
-            case 5:
+            case 7:
             case "end":
               return _context4.stop();
           }
@@ -215,21 +233,23 @@ var AiOeClient = /*#__PURE__*/function () {
         return _regeneratorRuntime().wrap(function _callee6$(_context6) {
           while (1) switch (_context6.prev = _context6.next) {
             case 0:
-              _context6.next = 2;
+              console.log("[mobile][aioe] logout");
+              _context6.next = 3;
               return this.postEntity('logout', {
                 deviceId: deviceId,
                 key: key
               });
-            case 2:
+            case 3:
               rsp = _context6.sent;
+              console.log("logged out", rsp);
               if (!(rsp.status == 'ok')) {
-                _context6.next = 7;
+                _context6.next = 9;
                 break;
               }
               return _context6.abrupt("return");
-            case 7:
+            case 9:
               throw new Error(rsp.message);
-            case 8:
+            case 10:
             case "end":
               return _context6.stop();
           }
@@ -255,12 +275,13 @@ var AiOeClient = /*#__PURE__*/function () {
               throw new Error("aioe.getMessages requires a key parameters.");
             case 2:
               query = new URLSearchParams(params).toString();
-              _context7.next = 5;
+              console.log("[mobile][aioe][getMessages] get messages", query);
+              _context7.next = 6;
               return this.fetch(this.API_URL + '/api/chat?' + query);
-            case 5:
+            case 6:
               response = _context7.sent;
               return _context7.abrupt("return", response);
-            case 7:
+            case 8:
             case "end":
               return _context7.stop();
           }
@@ -279,7 +300,8 @@ var AiOeClient = /*#__PURE__*/function () {
         return _regeneratorRuntime().wrap(function _callee8$(_context8) {
           while (1) switch (_context8.prev = _context8.next) {
             case 0:
-              _context8.next = 2;
+              console.log("[mobile][aioe][updateGroupAccess] Updating group access time for user", userId, "in group", groupId);
+              _context8.next = 3;
               return this.fetch(this.API_URL + '/api/chat/access', {
                 method: 'POST',
                 headers: {
@@ -291,10 +313,11 @@ var AiOeClient = /*#__PURE__*/function () {
                   key: apiKey
                 })
               });
-            case 2:
+            case 3:
               response = _context8.sent;
+              console.log("[mobile][aioe][updateGroupAccess] rsp ok:", response.ok);
               return _context8.abrupt("return", response);
-            case 4:
+            case 6:
             case "end":
               return _context8.stop();
           }
@@ -314,12 +337,13 @@ var AiOeClient = /*#__PURE__*/function () {
           while (1) switch (_context9.prev = _context9.next) {
             case 0:
               uri = this.API_URL + "/api/command";
+              console.log("command", name, uri);
               data = {
                 command: name,
                 args: args ? args : null,
                 key: apiKey
               };
-              _context9.next = 4;
+              _context9.next = 5;
               return this.fetch(uri, {
                 method: "POST",
                 headers: {
@@ -327,10 +351,10 @@ var AiOeClient = /*#__PURE__*/function () {
                 },
                 body: JSON.stringify(data)
               });
-            case 4:
+            case 5:
               rsp = _context9.sent;
               return _context9.abrupt("return", rsp.json());
-            case 6:
+            case 7:
             case "end":
               return _context9.stop();
           }
@@ -396,7 +420,8 @@ var AiOeClient = /*#__PURE__*/function () {
         return _regeneratorRuntime().wrap(function _callee0$(_context0) {
           while (1) switch (_context0.prev = _context0.next) {
             case 0:
-              axios.defaults.headers.common['x-api-key'] = apiKey;
+              console.log("[mobile][aioe][post2] posting", message.content, apiKey);
+              //axios.defaults.headers.common['x-api-key'] = apiKey;
               formData = new FormData();
               formData.append('content', message.content);
               formData.append('sender_id', message.sender.id);
@@ -405,15 +430,22 @@ var AiOeClient = /*#__PURE__*/function () {
               return axios.post(this.API_URL + '/api/chat', formData);
             case 7:
               response = _context0.sent;
+              console.log("[mobile][aioe][post2] response", response.data, {
+                headers: {
+                  'x-api-key': apiKey
+                }
+              });
               if (!(!response.data || response.data.status !== 'ok')) {
-                _context0.next = 10;
+                _context0.next = 12;
                 break;
               }
+              console.error("[mobile][aioe][post2] Error posting message:", response.data);
               throw new Error(response.data.message || "Failed to post message");
-            case 10:
+            case 12:
+              console.log("[mobile][aioe][post2] Message posted successfully");
               data = response.data;
               return _context0.abrupt("return", data);
-            case 12:
+            case 15:
             case "end":
               return _context0.stop();
           }
@@ -486,8 +518,9 @@ var AiOeClient = /*#__PURE__*/function () {
               }
               return _context10.abrupt("return", rsp.apis);
             case 7:
+              console.log("response", rsp.status, rsp);
               throw new Error(rsp.message);
-            case 8:
+            case 9:
             case "end":
               return _context10.stop();
           }
@@ -527,58 +560,63 @@ var AiOeClient = /*#__PURE__*/function () {
         return _regeneratorRuntime().wrap(function _callee12$(_context12) {
           while (1) switch (_context12.prev = _context12.next) {
             case 0:
+              console.log("api config", api.parameters);
               query = {};
               _iterator = _createForOfIteratorHelper(api.parameters);
-              _context12.prev = 2;
+              _context12.prev = 3;
               _iterator.s();
-            case 4:
+            case 5:
               if ((_step = _iterator.n()).done) {
-                _context12.next = 17;
+                _context12.next = 19;
                 break;
               }
               input = _step.value;
+              console.log('parameter', input);
               if (!(input.type == 'hidden')) {
-                _context12.next = 10;
+                _context12.next = 12;
                 break;
               }
               query[input.name] = input.value;
-              _context12.next = 15;
+              _context12.next = 17;
               break;
-            case 10:
+            case 12:
               if (values[input.name]) {
-                _context12.next = 14;
+                _context12.next = 16;
                 break;
               }
               throw new Error("Missing parameter:" + input.name);
-            case 14:
+            case 16:
               query[input.name] = values[input.name];
-            case 15:
-              _context12.next = 4;
-              break;
             case 17:
-              _context12.next = 22;
+              _context12.next = 5;
               break;
             case 19:
-              _context12.prev = 19;
-              _context12.t0 = _context12["catch"](2);
+              _context12.next = 24;
+              break;
+            case 21:
+              _context12.prev = 21;
+              _context12.t0 = _context12["catch"](3);
               _iterator.e(_context12.t0);
-            case 22:
-              _context12.prev = 22;
+            case 24:
+              _context12.prev = 24;
               _iterator.f();
-              return _context12.finish(22);
-            case 25:
+              return _context12.finish(24);
+            case 27:
+              console.log("query", query);
               queryString = new URLSearchParams(query).toString();
               uri = api.uri + "?" + queryString;
-              _context12.next = 29;
+              console.log("fetching uri", uri);
+              _context12.next = 33;
               return this.fetch(uri);
-            case 29:
+            case 33:
               response = _context12.sent;
+              console.log("api Response", response);
               return _context12.abrupt("return", response);
-            case 31:
+            case 36:
             case "end":
               return _context12.stop();
           }
-        }, _callee12, this, [[2, 19, 22, 25]]);
+        }, _callee12, this, [[3, 21, 24, 27]]);
       }));
       function callApi(_x30, _x31, _x32) {
         return _callApi.apply(this, arguments);
@@ -589,17 +627,20 @@ var AiOeClient = /*#__PURE__*/function () {
     key: "getUser",
     value: function () {
       var _getUser = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee13(username, apiKey) {
+        var _user$groups;
         var uri, user;
         return _regeneratorRuntime().wrap(function _callee13$(_context13) {
           while (1) switch (_context13.prev = _context13.next) {
             case 0:
               uri = this.API_URL + '/api/user/' + username + '?key=' + apiKey;
-              _context13.next = 3;
+              console.log("[mobile][aioe][getUser] calling", uri);
+              _context13.next = 4;
               return this.fetch(uri);
-            case 3:
+            case 4:
               user = _context13.sent;
+              console.log("[mobile][aioe][getUser] user ID", user === null || user === void 0 ? void 0 : user.id, 'group count:', (_user$groups = user.groups) === null || _user$groups === void 0 ? void 0 : _user$groups.length);
               return _context13.abrupt("return", user);
-            case 5:
+            case 7:
             case "end":
               return _context13.stop();
           }
@@ -620,12 +661,14 @@ var AiOeClient = /*#__PURE__*/function () {
             case 0:
               queryString = new URLSearchParams(parameters).toString();
               uri = this.API_URL + '/api/' + entityName + "?" + queryString;
-              _context14.next = 4;
+              console.log("calling", uri);
+              _context14.next = 5;
               return this.fetch(uri);
-            case 4:
+            case 5:
               response = _context14.sent;
+              console.log("Response:", response);
               return _context14.abrupt("return", response);
-            case 6:
+            case 8:
             case "end":
               return _context14.stop();
           }
@@ -645,14 +688,15 @@ var AiOeClient = /*#__PURE__*/function () {
           while (1) switch (_context15.prev = _context15.next) {
             case 0:
               uri = this.API_URL + '/api/' + entityName + '/' + id + '?key=' + key;
-              _context15.next = 3;
+              console.log("deleting ", entityName, id);
+              _context15.next = 4;
               return this.fetch(uri, {
                 method: "DELETE"
               });
-            case 3:
+            case 4:
               response = _context15.sent;
               return _context15.abrupt("return", response);
-            case 5:
+            case 6:
             case "end":
               return _context15.stop();
           }
@@ -672,7 +716,8 @@ var AiOeClient = /*#__PURE__*/function () {
           while (1) switch (_context16.prev = _context16.next) {
             case 0:
               uri = this.API_URL + '/api/' + entityName;
-              _context16.next = 3;
+              console.log("calling", uri, entityName, payload);
+              _context16.next = 4;
               return this.fetch(uri, {
                 method: "POST",
                 headers: {
@@ -680,10 +725,11 @@ var AiOeClient = /*#__PURE__*/function () {
                 },
                 body: JSON.stringify(payload) // Convert JS object to JSON
               });
-            case 3:
+            case 4:
               response = _context16.sent;
+              console.log("Response:", response);
               return _context16.abrupt("return", response);
-            case 5:
+            case 7:
             case "end":
               return _context16.stop();
           }
@@ -720,7 +766,7 @@ var AiOeClient = /*#__PURE__*/function () {
             case 2:
               response = _context17.sent;
               if (response.ok) {
-                _context17.next = 14;
+                _context17.next = 15;
                 break;
               }
               _context17.next = 6;
@@ -733,17 +779,18 @@ var AiOeClient = /*#__PURE__*/function () {
               }
               throw new Error("".concat(response.status, " error: ").concat(errorData.message));
             case 11:
+              console.log("[mobile][aioe] error:", errorData);
               throw new Error("HTTP error! Status: ".concat(response.status));
-            case 12:
-              _context17.next = 18;
+            case 13:
+              _context17.next = 19;
               break;
-            case 14:
-              _context17.next = 16;
+            case 15:
+              _context17.next = 17;
               return response.json();
-            case 16:
+            case 17:
               json = _context17.sent;
               return _context17.abrupt("return", json);
-            case 18:
+            case 19:
             case "end":
               return _context17.stop();
           }

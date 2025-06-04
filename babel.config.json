@@ -2,5 +2,5 @@
   "presets": [
     ["@babel/preset-env", { "modules": false }]
   ],
-  "plugins": ["transform-remove-console"]
+  "plugins": [] //["transform-remove-console"]
 }

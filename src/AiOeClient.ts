@@ -262,14 +262,18 @@ export default class AiOeClient {
     async post(message: any, apiKey: string) {
 
         console.log("[mobile][aioe][post2] posting", message.content, apiKey);
-        axios.defaults.headers.common['x-api-key'] = apiKey;
+        //axios.defaults.headers.common['x-api-key'] = apiKey;
 
         const formData = new FormData();
         formData.append('content', message.content);
         formData.append('sender_id', message.sender.id);
         formData.append('group_id', message.group.id);
         const response = await axios.post(this.API_URL + '/api/chat', formData);
-        console.log("[mobile][aioe][post2] response", response.data);
+        console.log("[mobile][aioe][post2] response", response.data, {
+            headers: {
+                'x-api-key': apiKey
+            }
+        });
         if (!response.data || response.data.status !== 'ok') {
             console.error("[mobile][aioe][post2] Error posting message:", response.data);
             throw new Error(response.data.message || "Failed to post message");
